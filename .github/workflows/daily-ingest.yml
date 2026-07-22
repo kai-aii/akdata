@@ -1,0 +1,33 @@
+name: Daily Fetch
+on:
+  schedule:
+    - cron: '12 9 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write          # 允许 git push
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: pip install pytdx==1.72 duckdb==1.5.4 pyarrow==25.0.0 pandas==3.0.3 pandera==0.32.1
+      - name: Fetch daily data
+        run: python scripts/fetch.py
+      - name: Commit and push
+        run: |
+          git config user.name "data-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git pull --rebase --autostash || { echo "Git 冲突，跳过本次推送"; exit 0; }
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No new data"
+          else
+            git commit -m "data: $(date +%Y-%m-%d)"
+            git push
+          fi
