@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.akdata-build/
+.akdata_cache/
+*.tmp
+*.egg-info/
